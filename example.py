@@ -15,7 +15,7 @@ args = parser.parse_args()
 loggers = [StdoutLogger(), JSONLogger()]
 if args.wandb:
     from expman.loggers.wandb_logger import WandbLogger
-    loggers.append(WandbLogger(name=args.project))
+    loggers.append(WandbLogger(project=args.project))
 
 # build experiment from argparse namespace
 exp = Experiment.from_namespace(args, loggers=loggers).start(delete_existing=args.delete_existing)
