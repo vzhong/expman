@@ -76,6 +76,7 @@ setup(
     # for example:
     # $ pip install -e .[dev,test]
     extras_require={
+        'wandb': ['wandb'],
         'dev': ['check-manifest', 'sphinx', 'sphinx_rtd_theme'],
         'test': ['coverage', 'nose'],
     },

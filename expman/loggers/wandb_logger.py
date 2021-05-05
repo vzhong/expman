@@ -14,7 +14,7 @@ class WandbLogger(Logger):
 
     def start(self, dlog=None, config=None, delete_existing=False):
         super().start(dlog, config=config, delete_existing=delete_existing)
-        self.run = wandb.init(project=self.project, id=self.name, config=config, resume=None if delete_existing else 'must', **self.kwargs)
+        self.run = wandb.init(project=self.project, id=self.name, config=config, resume=None if delete_existing else 'allow', **self.kwargs)
         self.wandb_config = wandb.config
         return self
 
