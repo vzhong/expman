@@ -22,10 +22,17 @@ class LinePlotter(Plotter):
             data[y+'_smooth'] = data[y].rolling(smooth_window, min_periods=smooth_window).mean()
         sns.lineplot(data=data, x=x, y=y+'_smooth', label=label, ax=ax, color=color, linewidth=linewidth)
 
-    def plot(self, data, x, y, group=None, xpid=None, read_every=1, smooth_window=10, align_x=1, ax=None, linewidth=3, alpha=0.4):
-        data = pd.DataFrame(data)
+    def plot(self, exps_and_logs, x, y, group=None, xpid=None, read_every=1, smooth_window=10, align_x=1, ax=None, linewidth=3, alpha=0.4):
         if ax is None:
             fig, ax = plt.subplots(figsize=(10, 10))
+
+        data = []
+        for exp, logs in exps_and_logs:
+            for r in logs:
+                r = r.copy()
+                r.update(exp.config)
+                data.append(r)
+        data = pd.DataFrame(data)
 
         if group is None:
             self.plot_group(data=data, x=x, y=y, ax=ax, xpid=xpid, read_every=read_every, smooth_window=smooth_window, align_x=align_x, alpha=alpha, linewidth=linewidth)

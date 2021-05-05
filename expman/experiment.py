@@ -7,7 +7,7 @@ import ujson as json
 
 class Experiment:
 
-    def __init__(self, config, loggers=tuple(), name_field='project', logdir_field='logdir', step=0):
+    def __init__(self, config, loggers=tuple(), name_field='name', logdir_field='logdir', step=0):
         self.name_field = name_field
         self.logdir_field = logdir_field
         self.config = config
@@ -75,21 +75,23 @@ class Experiment:
         assert self.exists(), 'Experiment does not exist at {}'.format(self.expdir)
         logger.start(self.expdir, self.config, delete_existing=False)
         logs = logger.load_logs(ignore=ignore)
+        ret = []
         for d in logs:
-            d.update(self.config)
+            ret.append(d)
         logger.finish()
-        return logs
+        return ret
 
     @classmethod
     def discover_logs(self, glob_path, logger, ignore=('time',)):
         dirs = glob.glob(glob_path)
-        data = []
+        exps = []
         for d in dirs:
             f = os.path.join(d, 'exp.json')
             if os.path.isfile(f):
                 exp = Experiment.from_fconfig(f)
-                data.extend(exp.load_logs(logger, ignore=ignore))
-        return data
+                logs = exp.load_logs(logger, ignore=ignore)
+                exps.append((exp, logs))
+        return exps
 
     def exists(self):
         return os.path.isdir(self.expdir)

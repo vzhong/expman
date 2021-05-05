@@ -34,19 +34,25 @@ if args.plot:
         for t in ['linear', 'quadratic']:
             # generate two types of experiments, linear and quadratic, each with 5 seeds
             random.seed(seed)
-            name = 'exp-seed:{}-type:{}'.format(seed, t)
-            exp = Experiment(config=dict(seed=seed, type=t, project=name, logdir=os.path.join(args.logdir, 'seeded')), loggers=[JSONLogger()]).start(delete_existing=args.delete_existing)
+            name = 'exp-seed{}-type{}'.format(seed, t)
+            loggers = [JSONLogger()]
+            if args.wandb:
+                loggers.append(WandbLogger(project='seeded', name=name))
+            exp = Experiment(config=dict(seed=seed, type=t, name=name, logdir=os.path.join(args.logdir, 'seeded')), loggers=loggers).start(delete_existing=args.delete_existing)
             for i in range(100):
                 if t == 'linear':
                     score = i + random.uniform(-noise, noise)
                 elif t == 'quadratic':
                     score = (i/10)**2 + random.uniform(-noise*2, noise*2)
                 exp.log(dict(score=score))
-        exp.finish()
+            exp.finish()
 
-    data = Experiment.discover_logs(glob_path=os.path.join(args.logdir, 'seeded', '*'), logger=JSONLogger())
+    exps_and_logs = Experiment.discover_logs(glob_path=os.path.join(args.logdir, 'seeded', '*'), logger=JSONLogger())
+
+    if args.wandb:
+        WandbLogger.upload_logs(exps_and_logs, project='seeded_upload')
 
     plotter = LinePlotter()
     fig, ax = plt.subplots(figsize=(5, 5))
-    plotter.plot(data, x='step', y='score', group='type', xpid='project', read_every=2, smooth_window=10, ax=ax)
+    plotter.plot(exps_and_logs, x='step', y='score', group='type', xpid='name', read_every=2, smooth_window=10, ax=ax)
     fig.savefig(args.plot)
