@@ -7,12 +7,13 @@ import ujson as json
 
 class Experiment:
 
-    def __init__(self, config, loggers=tuple(), name_field='name', logdir_field='logdir', step=0):
+    def __init__(self, config, loggers=tuple(), name_field='name', logdir_field='logdir', step=0, last_written_time=None):
         self.name_field = name_field
         self.logdir_field = logdir_field
         self.config = config
         self.loggers = loggers
         self.step = step
+        self.last_written_time = last_written_time
         self.started = False
 
     @property
@@ -32,15 +33,16 @@ class Experiment:
         return os.path.join(self.expdir, 'exp.json')
 
     @classmethod
-    def from_namespace(cls, args, name_field='project', logdir_field='logdir', loggers=tuple()):
+    def from_namespace(cls, args, name_field='name', logdir_field='logdir', loggers=tuple()):
         return cls(vars(args), name_field=name_field, logdir_field=logdir_field, loggers=loggers)
 
     @classmethod
     def from_fconfig(cls, fname):
         with open(fname) as f:
-            d = json.load(f)
-            del d['time']
-            return cls(**d)
+            return cls(**json.load(f))
+
+    def time_since_last_written(self):
+        return datetime.datetime.utcnow() - datetime.datetime.fromisoformat(self.last_written_time)
 
     def save(self):
         with open(self.explog, 'wt') as f:
@@ -49,7 +51,7 @@ class Experiment:
                 logdir_field=self.logdir_field,
                 config=self.config,
                 step=self.step,
-                time=datetime.datetime.utcnow().isoformat(),
+                last_written_time=self.last_written_time,
             ), f, indent=2)
 
     def load(self):
@@ -99,7 +101,7 @@ class Experiment:
     def log(self, content: dict):
         assert self.started, 'Please run experiment.start()'
         content['step'] = self.step
-        content['time'] = datetime.datetime.utcnow().isoformat()
+        self.last_written_time = content['time'] = datetime.datetime.utcnow().isoformat()
         for logger in self.loggers:
             logger.log(content)
         self.save()
