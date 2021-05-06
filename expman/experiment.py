@@ -3,6 +3,7 @@ import glob
 import datetime
 import logging
 import ujson as json
+from pathlib import Path
 
 
 class Experiment:
@@ -11,10 +12,11 @@ class Experiment:
         self.name_field = name_field
         self.logdir_field = logdir_field
         self.config = config
-        self.loggers = loggers
+        self.loggers = list(loggers)
         self.step = step
         self.last_written_time = last_written_time
         self.started = False
+        self.config['seedless_name'] = self.name.split('-seed')[0]
 
     @property
     def name(self):
@@ -22,15 +24,15 @@ class Experiment:
 
     @property
     def logdir(self):
-        return self.config[self.logdir_field]
+        return Path(self.config[self.logdir_field])
 
     @property
     def expdir(self):
-        return os.path.join(self.logdir, self.name)
+        return self.logdir.joinpath(self.name)
 
     @property
     def explog(self):
-        return os.path.join(self.expdir, 'exp.json')
+        return self.expdir.joinpath('exp.json')
 
     @classmethod
     def from_namespace(cls, args, name_field='name', logdir_field='logdir', loggers=tuple()):
@@ -44,8 +46,8 @@ class Experiment:
     def time_since_last_written(self):
         return datetime.datetime.utcnow() - datetime.datetime.fromisoformat(self.last_written_time)
 
-    def save(self):
-        with open(self.explog, 'wt') as f:
+    def save(self, fout=None):
+        with open(fout or self.explog, 'wt') as f:
             json.dump(dict(
                 name_field=self.name_field,
                 logdir_field=self.logdir_field,
@@ -71,6 +73,7 @@ class Experiment:
         for logger in self.loggers:
             logger.start(self.expdir, self.config, delete_existing=delete_existing)
         self.started = True
+        self.save()
         return self
 
     def load_logs(self, logger, ignore=('time',)):
