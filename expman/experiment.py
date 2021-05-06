@@ -59,6 +59,7 @@ class Experiment:
                 step=self.step,
                 last_written_time=self.last_written_time,
             ), f, indent=2)
+        return self
 
     def load(self):
         with open(self.explog) as f:

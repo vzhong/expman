@@ -51,10 +51,10 @@ class Job:
 
 class SlurmJob(Job):
 
-    def checkpoint(self, checkpoint_path) -> submitit.helpers.DelayedSubmission:
-        super().checkpoint()
+    def checkpoint(self, explog) -> submitit.helpers.DelayedSubmission:
+        super().checkpoint(explog)
         training_callable = self.__class__()
-        return submitit.helpers.DelayedSubmission(training_callable, checkpoint_path)
+        return submitit.helpers.DelayedSubmission(training_callable, explog)
 
     def launch_slurm(self, explog, slurm_kwargs=None, executor=None):
         import submitit
