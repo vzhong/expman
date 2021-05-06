@@ -47,7 +47,11 @@ class Experiment:
         return datetime.datetime.utcnow() - datetime.datetime.fromisoformat(self.last_written_time)
 
     def save(self, fout=None):
-        with open(fout or self.explog, 'wt') as f:
+        fout = fout or self.explog
+        root = Path(fout).parent
+        if not root.exists():
+            os.makedirs(root)
+        with open(fout, 'wt') as f:
             json.dump(dict(
                 name_field=self.name_field,
                 logdir_field=self.logdir_field,
@@ -63,11 +67,7 @@ class Experiment:
                 setattr(self, k, v)
 
     def start(self, delete_existing=False):
-        if self.exists():
-            if not delete_existing and os.path.isfile(self.explog):
-                logging.critical('Resuming from {}'.format(self.explog))
-                self.load()
-        else:
+        if not self.exists():
             logging.critical('Making directory at {}'.format(self.expdir))
             os.makedirs(self.expdir)
         for logger in self.loggers:
