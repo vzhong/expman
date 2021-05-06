@@ -1,4 +1,5 @@
 from .logger import Logger
+import logging
 import os
 import ujson as json
 
@@ -20,12 +21,20 @@ class JSONLogger(Logger):
         with open(self.fname, 'at') as f:
             f.write(json.dumps(content) + '\n')
 
-    def load_logs(self, ignore=tuple()):
+    def load_logs(self, ignore=tuple(), error='warn'):
         logs = []
-        with open(self.fname, 'rt') as f:
-            for line in f:
-                d = {k: v for k, v in json.loads(line).items() if k not in ignore}
-                logs.append(d)
+        try:
+            with open(self.fname, 'rt') as f:
+                for line in f:
+                    d = {k: v for k, v in json.loads(line).items() if k not in ignore}
+                    logs.append(d)
+        except Exception as e:
+            if error == 'warn':
+                logging.critical(repr(e))
+            elif error == 'ignore':
+                pass
+            else:
+                raise e
         return logs
 
     def finish(self):
