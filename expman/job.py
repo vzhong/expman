@@ -13,22 +13,41 @@ class Job:
 
     @property
     def flags(self):
+        """
+        Experiment configs accessible through the form of a `argparse.Namespace`.
+        """
         return argparse.Namespace(**self.exp.config)
 
-    def state_dict(self):
+    def state_dict(self) -> dict:
+        """
+        Return things to be saved.
+        """
         raise NotImplementedError()
 
-    def load_state_dict(self, d):
+    def load_state_dict(self, d: dict):
+        """
+        Load from saved dict.
+        """
         raise NotImplementedError()
 
-    def forward(self, explog):
+    def forward(self, explog: str):
+        """
+        Start from experiment specified in explog.
+        At this point `self.exp` has been loaded.
+        """
         raise NotImplementedError()
 
     def job_checkpoint_path(self, explog):
+        """
+        Where the job's state_dict is saved.
+        """
         root = os.path.dirname(explog)
         return os.path.join(root, 'job.tar')
 
     def checkpoint(self, explog):
+        """
+        Saves the checkpoint to `explog`.
+        """
         assert self.exp is not None, 'Cannot checkpoint empty experiment!'
         logging.critical('Saving experiment to {}'.format(explog))
         self.exp.save(explog)
@@ -38,6 +57,9 @@ class Job:
         torch.save(d, fjob)
 
     def __call__(self, explog):
+        """
+        Runs the job, resuming from checkpoint if it exists.
+        """
         assert os.path.isfile(explog), 'Cannot launch job without experiment config'
         self.exp = Experiment.from_fconfig(explog)
         logging.critical('Loading experiment from {}'.format(explog))
@@ -50,6 +72,9 @@ class Job:
 
 
 class SlurmJob(Job):
+    """
+    This supports preemption through submitit
+    """
 
     def checkpoint(self, explog) -> submitit.helpers.DelayedSubmission:
         super().checkpoint(explog)
@@ -57,7 +82,6 @@ class SlurmJob(Job):
         return submitit.helpers.DelayedSubmission(training_callable, explog)
 
     def launch_slurm(self, explog, slurm_kwargs=None, executor=None):
-        import submitit
         if executor is None:
             executor = submitit.SlurmExecutor(folder=os.path.join(self.exp.logdir, 'slurm'), max_num_timeout=3)
             executor.update_parameters(**slurm_kwargs)

@@ -30,6 +30,7 @@ class JSONLogger(Logger):
                     logs.append(d)
         except Exception as e:
             if error == 'warn':
+                logging.critical('In {}'.format(self.fname))
                 logging.critical(repr(e))
             elif error == 'ignore':
                 pass
