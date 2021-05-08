@@ -114,3 +114,12 @@ class Experiment:
     def finish(self):
         for logger in self.loggers:
             logger.finish()
+
+    @classmethod
+    def convert_rl_exp(cls, explog):
+        with open(explog) as f:
+            config = json.load(f)['args']
+            config['logdir'] = os.path.dirname(os.path.dirname(os.path.abspath(explog)))
+        c = cls(config, name_field='xpid', logdir_field='logdir')
+        c.save()
+        logging.info('Converted {} to {}'.format(explog, c.explog))
