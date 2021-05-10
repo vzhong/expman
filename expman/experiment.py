@@ -47,7 +47,11 @@ class Experiment:
         return datetime.datetime.utcnow() - datetime.datetime.fromisoformat(self.last_written_time)
 
     def save(self, fout=None):
-        with open(fout or self.explog, 'wt') as f:
+        fout = os.path.abspath(fout or self.explog)
+        parent = os.path.dirname(fout)
+        if not os.path.isdir(parent):
+            os.makedirs(parent)
+        with open(fout, 'wt') as f:
             json.dump(dict(
                 name_field=self.name_field,
                 logdir_field=self.logdir_field,
