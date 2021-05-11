@@ -59,6 +59,7 @@ class Experiment:
                 step=self.step,
                 last_written_time=self.last_written_time,
             ), f, indent=2)
+        return self
 
     def load(self):
         with open(self.explog) as f:
@@ -67,11 +68,7 @@ class Experiment:
                 setattr(self, k, v)
 
     def start(self, delete_existing=False):
-        if self.exists():
-            if not delete_existing and os.path.isfile(self.explog):
-                logging.critical('Resuming from {}'.format(self.explog))
-                self.load()
-        else:
+        if not self.exists():
             logging.critical('Making directory at {}'.format(self.expdir))
             os.makedirs(self.expdir)
         for logger in self.loggers:
@@ -117,3 +114,12 @@ class Experiment:
     def finish(self):
         for logger in self.loggers:
             logger.finish()
+
+    @classmethod
+    def convert_rl_exp(cls, explog):
+        with open(explog) as f:
+            config = json.load(f)['args']
+            config['logdir'] = os.path.dirname(os.path.dirname(os.path.abspath(explog)))
+        c = cls(config, name_field='xpid', logdir_field='logdir')
+        c.save()
+        logging.info('Converted {} to {}'.format(explog, c.explog))
