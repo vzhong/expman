@@ -47,10 +47,10 @@ class Experiment:
         return datetime.datetime.utcnow() - datetime.datetime.fromisoformat(self.last_written_time)
 
     def save(self, fout=None):
-        fout = fout or self.explog
-        root = Path(fout).parent
-        if not root.exists():
-            os.makedirs(root)
+        fout = os.path.abspath(fout or self.explog)
+        parent = os.path.dirname(fout)
+        if not os.path.isdir(parent):
+            os.makedirs(parent)
         with open(fout, 'wt') as f:
             json.dump(dict(
                 name_field=self.name_field,
