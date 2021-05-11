@@ -68,7 +68,7 @@ class Experiment:
                 setattr(self, k, v)
 
     def start(self, delete_existing=False):
-        if not self.exists():
+        if not self.exists() or not os.path.isdir(os.path.dirname(self.explog)):
             logging.critical('Making directory at {}'.format(self.expdir))
             os.makedirs(self.expdir)
         for logger in self.loggers:
@@ -100,7 +100,7 @@ class Experiment:
         return exps
 
     def exists(self):
-        return os.path.isdir(self.expdir)
+        return os.path.isfile(self.explog)
 
     def log(self, content: dict):
         assert self.started, 'Please run experiment.start()'

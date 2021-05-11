@@ -56,7 +56,10 @@ class JSONLogger(Logger):
 
         log = cls().start(os.path.dirname(frl), delete_existing=delete_existing)
         with open(frl) as f:
-            header = next(f).strip('#').strip().split(',')
+            try:
+                header = next(f).strip('#').strip().split(',')
+            except StopIteration as e:
+                return []
             for line in f:
                 if line.startswith('#'):
                     continue

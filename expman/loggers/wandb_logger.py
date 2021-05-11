@@ -1,6 +1,7 @@
 from .logger import Logger
 from .json_logger import JSONLogger
 from ..experiment import Experiment
+import os
 import wandb
 import logging
 
@@ -32,10 +33,14 @@ class WandbLogger(Logger):
         self.wandb_config = None
 
     @classmethod
-    def convert_exp(cls, fexp, project):
+    def convert_exp(cls, fexp, project, ignore=tuple()):
         exp = Experiment.from_fconfig(fexp)
         json_log = exp.load_logs(JSONLogger())
-        logger = cls(project=project, name=exp.name).start(dlog=exp.logdir, config=exp.config, delete_existing=True)
+        config = exp.config.copy()
+        for f in ignore:
+            del config[f]
+        config['seedless_name'] = os.path.basename(config['seedless_name'])
+        logger = cls(project=project, name=exp.name.replace(':', '_')).start(dlog=exp.logdir, config=config, delete_existing=True)
         for r in json_log:
             logger.log(r)
         logger.finish()
