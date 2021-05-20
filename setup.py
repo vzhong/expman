@@ -98,7 +98,7 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'eplot=expman.plotters.term_plot:main',
+            'eplot=expman.bin.term_plot:main',
             'econv=expman.bin.convert_logs:main',
         ],
     },
