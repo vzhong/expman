@@ -77,10 +77,10 @@ class Experiment:
         self.save()
         return self
 
-    def load_logs(self, logger, ignore=('time',)):
+    def load_logs(self, logger, ignore=('time',), error='warn'):
         assert self.exists(), 'Experiment does not exist at {}'.format(self.expdir)
         logger.start(self.expdir, self.config, delete_existing=False)
-        logs = logger.load_logs(ignore=ignore)
+        logs = logger.load_logs(ignore=ignore, error=error)
         ret = []
         for d in logs:
             ret.append(d)
@@ -88,14 +88,20 @@ class Experiment:
         return ret
 
     @classmethod
-    def discover_logs(self, glob_path, logger, ignore=('time',)):
+    def discover_logs(self, glob_path, logger, ignore=('time',), error='warn', verbose=False):
         dirs = glob.glob(glob_path)
         exps = []
+        if verbose == 'notebook':
+            from tqdm.autonotebook import tqdm
+            dirs = tqdm(dirs)
+        elif verbose:
+            from tqdm.auto import tqdm
+            dirs = tqdm(dirs)
         for d in dirs:
             f = os.path.join(d, 'exp.json')
             if os.path.isfile(f):
                 exp = Experiment.from_fconfig(f)
-                logs = exp.load_logs(logger, ignore=ignore)
+                logs = exp.load_logs(logger, ignore=ignore, error=error)
                 exps.append((exp, logs))
         return exps
 

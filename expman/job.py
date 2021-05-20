@@ -75,9 +75,12 @@ class Job:
         fjob = job.job_checkpoint_path(explog)
         if os.path.isfile(fjob):
             logging.critical('Resuming job from {}'.format(fjob))
-            d = torch.load(fjob)
-            job.load_non_user_state_dict(d)
-            job.load_state_dict(d)
+            try:
+                d = torch.load(fjob)
+                job.load_non_user_state_dict(d)
+                job.load_state_dict(d)
+            except Exception:
+                logging.critical('Failed to load job... restarting')
         return job
 
     def __call__(self, explog):

@@ -27,19 +27,27 @@ class JSONLogger(Logger):
 
     def load_logs(self, ignore=tuple(), error='warn'):
         logs = []
-        try:
-            with open(self.fname, 'rt') as f:
-                for line in f:
+        if not os.path.isfile(self.fname):
+            if error == 'warn':
+                logging.critical('file doesnt exist {}'.format(self.fname))
+                return logs
+            elif error == 'ignore':
+                return logs
+            else:
+                raise Exception('file doesnt exist {}'.format(self.fname))
+        with open(self.fname, 'rt') as f:
+            for line in f:
+                try:
                     d = {k: v for k, v in json.loads(line).items() if k not in ignore}
                     logs.append(d)
-        except Exception as e:
-            if error == 'warn':
-                logging.critical('In {}'.format(self.fname))
-                logging.critical(repr(e))
-            elif error == 'ignore':
-                pass
-            else:
-                raise e
+                except Exception as e:
+                    if error == 'warn':
+                        logging.critical('In {}'.format(self.fname))
+                        logging.critical(repr(e))
+                    elif error == 'ignore':
+                        pass
+                    else:
+                        raise e
         return logs
 
     def finish(self):
