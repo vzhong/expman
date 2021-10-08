@@ -24,7 +24,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='expman',
-    version='0.0.5',
+    version='0.0.7',
 
     description='Experiment manager.',
     long_description=long_description,
